@@ -1,35 +1,41 @@
-name: Pages
+name: Deploy                      # Actions 显示的名字，随意设置
 
-on:
-  push:
-    branches:
-      - master  # default branch
+on: [push]                        # 监听到 push 事件后触发
 
 jobs:
-  pages:
+  build:
+
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js 12.x
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12.x'
-      - name: Cache NPM dependencies
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: ${{ runner.OS }}-npm-cache
-          restore-keys: |
-            ${{ runner.OS }}-npm-cache
-      - name: Install Dependencies
-        run: npm install
-      - name: Build
-        run: | 
-            yarn run hexo clean
-            yarn run hexo g
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.SSH_PRIVATE }}
-          publish_dir: ./public
-          publish_branch: content  # deploying branch
+    - name: Checkout              # 拉取当前执行 Actions 仓库的指定分支
+      uses: actions/checkout@v2
+      with:
+        ref: master
+
+    - name: Setup Node            # 安装 Node 环境
+      uses: actions/setup-node@v1
+      with:
+        node-version: "12.x"
+
+    - name: Hexo Generate         # 安装 Hexo 依赖并且生成静态文件
+      run: |
+        rm -f .yarnclean
+        yarn --frozen-lockfile --ignore-engines --ignore-optional --non-interactive --silent --ignore-scripts --production=false
+        rm -rf ./public
+        yarn run hexo clean
+        yarn run hexo generate
+
+    - name: Hexo Deploy           # 部署步骤，这里以 hexo deploy 为例
+      env:
+        SSH_PRIVATE: ${{ secrets.SSH_PRIVATE }}
+        GIT_NAME: Vang3lis 
+        GIT_EMAIL: 852763852@qq.com
+      run: |
+        mkdir -p ~/.ssh/
+        echo "$SSH_PRIVATE" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+        git config --global user.name "$GIT_NAME"
+        git config --global user.email "$GIT_EMAIL"
+        yarn run hexo deploy
