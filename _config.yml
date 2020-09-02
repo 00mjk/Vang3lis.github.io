@@ -13,7 +13,7 @@ timezone: 'Asia/Shanghai'
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://Vang3lis.github.io
+url: http://vang3lis.github.io
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
